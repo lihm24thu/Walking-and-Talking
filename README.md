@@ -15,3 +15,8 @@ This repository contains the analysis and modeling code used in the manuscript s
 | Fig. 4 | Consistent population-level neural organization across behavioral contexts revealed by deep learning | `scripts/` |
 | Fig. 5 | Spatial mapping of cross-context consistency reveals distributed cortical networks with preserved functional organization | `scripts/` |
 | Fig. 6 | Shared neural subspace underlying speech representations across contexts and brain regional contributions | `scripts/` |
+
+## Data
+
+Raw neural recordings are not included in this repository because of patient privacy and/or data-sharing restrictions.
+The data that support the findings of this study are available on request from the corresponding author. Data are not publicly available due to ethical restrictions. Requests will be considered on a case-by-case basis, and data access may require signing a data access agreement.
