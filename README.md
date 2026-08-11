@@ -1,4 +1,4 @@
-# Walking and Talking: Neural Representations of Speech During Free Movement
+# Walking and Talking: Neural Representations of Speech under In-bed and Freely-moving Settings
 
 Code repository for:
 
