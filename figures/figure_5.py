@@ -1,10 +1,12 @@
 #### Corrsponding to Fig. 5
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from scipy.spatial.distance import cdist
 from tqdm import tqdm
+import seaborn as sns
 
 import nibabel as nib
 from nilearn.datasets import load_mni152_brain_mask
@@ -73,7 +75,60 @@ def sci_across_mni_xyz(df_all):
         plt.show()
 
 
-# Fig. 5c-d,f-g
+# Fig. 5b,e
+
+## Visualization
+def asymm_report_with_permutation(df_group, n_perms, save_root):
+    """
+    df_group: data frame, with columns:
+        "x": represents the MNI x-coordinate.
+        "stability_func": represents the SCI calculated.
+    """
+    os.makedirs(save_root, exist_ok=True)
+    df = df_group.copy()
+    df["hemisphere"] = np.where(df["x"] < 0, "Left", "Right")
+    
+    obs_left_mean = df.loc[df["hemisphere"] == "Left", "stability_func"].mean()
+    obs_right_mean = df.loc[df["hemisphere"] == "Right", "stability_func"].mean()
+    observed_diff = obs_left_mean - obs_right_mean
+    
+    print(f"\n🎲 Running {n_perms} permutations for hemisphere bias...")
+    perm_diffs = []
+    all_vals = df["stability_func"].values
+    
+    for _ in range(n_perms):
+        shuffled_vals = np.random.permutation(all_vals)
+        df["temp_shuffled"] = shuffled_vals
+        p_left = df.loc[df["hemisphere"] == "Left", "temp_shuffled"].mean()
+        p_right = df.loc[df["hemisphere"] == "Right", "temp_shuffled"].mean()
+        perm_diffs.append(p_left - p_right)
+    
+    perm_p_val = np.mean(np.abs(perm_diffs) >= np.abs(observed_diff))
+    
+    plt.figure(figsize=(12, 8))
+    sns.histplot(perm_diffs, kde=True, color="gray", alpha=0.5)
+    plt.axvline(observed_diff, color="red", linestyle="--", label=f"Observed Diff: {observed_diff:.3f}")
+    plt.title(f"Hemisphere Permutation Test (p={perm_p_val:.4f})", fontsize=18)
+    plt.xlabel("Difference (Left - Right)", fontsize=18)
+    plt.ylabel("Frequency", fontsize=18)
+
+    ax = plt.gca()
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['left'].set_color('black')
+    ax.spines['bottom'].set_color('black')
+
+    plt.legend(fontsize=18)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.savefig(os.path.join(save_root, "permutation_hemisphere_test.png"))
+    plt.close()
+
+# Fig. 5c, f
 
 ## Permutation test and zscored SCI on MNI152 brain
 def z_monte_carlo(df_all, vox_v=5, sigma = 6.0, n_perm = 500):
@@ -182,3 +237,4 @@ def z_monte_carlo(df_all, vox_v=5, sigma = 6.0, n_perm = 500):
         Z_img,
         "Spatial_Stability_ZMap.nii.gz"
     )
+
