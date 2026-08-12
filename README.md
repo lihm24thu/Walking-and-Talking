@@ -6,6 +6,9 @@ Code repository for:
 
 This repository contains the analysis and modeling code used in the manuscript submitted to **Nature Communications**.
 
+<img width="822" height="639" alt="截屏2026-08-12 16 40 02" src="https://github.com/user-attachments/assets/6cf1affd-fd64-4987-ae27-f60a21c83556" />
+
+
 ## Reproducing the main figures
 
 | Figure | Analysis and Visualization | Script / Notebook |
