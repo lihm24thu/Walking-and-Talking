@@ -1,5 +1,5 @@
 #### Visualization of linear_decoding.py results
-x
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
