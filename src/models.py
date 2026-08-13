@@ -4,6 +4,76 @@ import torch.nn.functional as F
 
 # Deep Learning Models for Population-level analysis
 
+## Speech Detection Model
+class CNN_BiLSTM_Binary_MMD_SE(nn.Module):
+    def __init__(self, input_channels, time_steps,
+                 cnn_out_channels=64, hidden_size=128, dropout=0.5):
+        super().__init__()
+
+        # CNN Feature Extractor
+        self.cnn = nn.Sequential(
+            nn.Conv1d(input_channels, 32, kernel_size=5, padding=2),
+            nn.GroupNorm(4, 32),
+            nn.ReLU(),
+            nn.MaxPool1d(2),
+            nn.Conv1d(32, cnn_out_channels, kernel_size=5, padding=2),
+            nn.GroupNorm(4, cnn_out_channels),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.MaxPool1d(2)
+        )
+
+        # Squeeze-and-Excitation Module
+        self.se = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            nn.Conv1d(cnn_out_channels, cnn_out_channels // 4, kernel_size=1),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(cnn_out_channels // 4, cnn_out_channels, kernel_size=1),
+            nn.Sigmoid()
+        )
+
+        # BiLSTM Temporal Modeling
+        self.lstm = nn.LSTM(
+            input_size=cnn_out_channels,
+            hidden_size=hidden_size,
+            num_layers=2,
+            batch_first=True,
+            bidirectional=True
+        )
+
+        # Attention Pooling
+        self.att_conv = nn.Conv1d(hidden_size * 2, 1, kernel_size=1)
+        self.dropout = nn.Dropout(dropout)
+        self.norm = nn.LayerNorm(hidden_size * 2)
+
+        # Final Classifier
+        self.fc = nn.Linear(hidden_size * 2, 1)
+        self.logit_scale = nn.Parameter(torch.tensor(0.5)) 
+
+    def forward(self, x, return_feature=False):
+        x = self.cnn(x)  # [B, C, T]
+
+        # --- Squeeze-and-Excitation ---
+        se_weight = self.se(x)  # [B, C, 1]
+        x = x * se_weight
+
+        x = x.permute(0, 2, 1)  # [B, T, C]
+        lstm_out, _ = self.lstm(x)  # [B, T, H*2]
+        lstm_out = self.dropout(lstm_out)
+
+        att_weights = torch.sigmoid(self.att_conv(lstm_out.permute(0, 2, 1)))  # [B, 1, T]
+        att_weights = att_weights.permute(0, 2, 1)  # [B, T, 1]
+        pooled = torch.sum(lstm_out * att_weights, dim=1)  # [B, H*2]
+
+        pooled = self.norm(pooled)
+        logits = self.fc(pooled)  # [B, 1]
+        logits = self.logit_scale * logits
+
+        if return_feature:
+            return logits, pooled
+        return logits
+
+
 ## Mel-spectrogram decoding
 
 ### Embedding Module
