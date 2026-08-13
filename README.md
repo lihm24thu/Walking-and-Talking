@@ -21,5 +21,4 @@ This repository contains the analysis and modeling code used in the manuscript s
 
 ## Data
 
-Raw neural recordings are not included in this repository because of patient privacy and data-sharing restrictions.
 The data that support the findings of this study are available on request from the corresponding author. Data are not publicly available due to ethical restrictions. Requests will be considered on a case-by-case basis, and data access may require signing a data access agreement.
